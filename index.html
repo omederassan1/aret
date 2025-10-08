@@ -1,1081 +1,186 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة ديون العملاء</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #3498db;
-            --secondary: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --gray: #95a5a6;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 15px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--dark));
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        
-        header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-        
-        header p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .nav-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .nav-btn {
-            background: white;
-            border: none;
-            border-radius: 12px;
-            padding: 15px 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--dark);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .nav-btn i {
-            font-size: 1.5rem;
-        }
-        
-        .nav-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
-        }
-        
-        .nav-btn.add-debt {
-            color: var(--primary);
-        }
-        
-        .nav-btn.receive-debt {
-            color: var(--secondary);
-        }
-        
-        .nav-btn.account-statement {
-            color: var(--warning);
-        }
-        
-        .nav-btn.add-customer {
-            color: var(--danger);
-        }
-        
-        .page {
-            display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
-        }
-        
-        .page.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .page-title {
-            font-size: 1.4rem;
-            color: var(--dark);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--light);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-        
-        select, input, textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border 0.3s;
-        }
-        
-        select:focus, input:focus, textarea:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        .btn-success {
-            background: var(--secondary);
-        }
-        
-        .btn-success:hover {
-            background: #27ae60;
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-        }
-        
-        .btn-warning:hover {
-            background: #e67e22;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 10px;
-            color: var(--primary);
-        }
-        
-        .loading.active {
-            display: block;
-        }
-        
-        .customers-list {
-            display: grid;
-            gap: 15px;
-        }
-        
-        .customer-card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-            border-right: 4px solid var(--primary);
-            transition: all 0.3s;
-        }
-        
-        .customer-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .customer-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .customer-balance {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--danger);
-        }
-        
-        .customer-balance.positive {
-            color: var(--secondary);
-        }
-        
-        .transactions-list {
-            margin-top: 20px;
-        }
-        
-        .transaction-item {
-            background: var(--light);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .transaction-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .transaction-date {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-        
-        .transaction-amount {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-        
-        .transaction-amount.positive {
-            color: var(--secondary);
-        }
-        
-        .transaction-amount.negative {
-            color: var(--danger);
-        }
-        
-        .transaction-notes {
-            color: var(--dark);
-            margin-bottom: 10px;
-        }
-        
-        .transaction-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .action-btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .edit-btn {
-            background: var(--warning);
-            color: white;
-        }
-        
-        .delete-btn {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .back-btn {
-            background: var(--gray);
-            color: white;
-            margin-top: 20px;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            animation: modalFadeIn 0.3s ease;
-        }
-        
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .modal-title {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: var(--dark);
-            text-align: center;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .modal-actions .btn {
-            flex: 1;
-        }
-        
-        .success-message {
-            background: var(--secondary);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .success-message.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @media (min-width: 768px) {
-            .container {
-                max-width: 750px;
-            }
-            
-            .nav-buttons {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            header h1 {
-                font-size: 2.2rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📒 ديون العملاء</title>
+  <style>
+    body {
+      font-family: "Cairo", sans-serif;
+      background: linear-gradient(135deg, #3f51b5, #2196f3);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      color: #333;
+      border-radius: 20px;
+      padding: 20px;
+      width: 90%;
+      max-width: 450px;
+      margin: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    button {
+      width: 100%;
+      margin: 8px 0;
+      padding: 14px;
+      font-size: 18px;
+      background: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #1976d2; }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    h2, h3 { margin-bottom: 10px; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>نظام إدارة ديون العملاء</h1>
-            <p>إدارة فعالة وسهلة لديون العملاء مع تقارير مفصلة</p>
-        </header>
-        
-        <div class="nav-buttons">
-            <button class="nav-btn add-debt" data-page="add-debt-page">
-                <i class="fas fa-hand-holding-usd"></i>
-                <span>إضافة دين</span>
-            </button>
-            <button class="nav-btn receive-debt" data-page="receive-debt-page">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>قبض دين</span>
-            </button>
-            <button class="nav-btn account-statement" data-page="account-statement-page">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>كشف حساب</span>
-            </button>
-            <button class="nav-btn add-customer" data-page="add-customer-page">
-                <i class="fas fa-user-plus"></i>
-                <span>إضافة عميل</span>
-            </button>
-        </div>
-        
-        <!-- صفحة إضافة دين -->
-        <div id="add-debt-page" class="page">
-            <h2 class="page-title"><i class="fas fa-hand-holding-usd"></i> إضافة دين جديد</h2>
-            
-            <div class="success-message" id="add-debt-success">
-                تم إضافة الدين بنجاح!
-            </div>
-            
-            <div class="form-group">
-                <label for="debt-customer">اختر العميل</label>
-                <select id="debt-customer">
-                    <option value="">-- اختر العميل --</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="debt-amount">المبلغ (ريال سعودي)</label>
-                <input type="number" id="debt-amount" placeholder="أدخل المبلغ" inputmode="numeric">
-            </div>
-            
-            <div class="form-group">
-                <label for="debt-notes">ملاحظات (اختياري)</label>
-                <textarea id="debt-notes" placeholder="أدخل أي ملاحظات حول الدين"></textarea>
-            </div>
-            
-            <button class="btn" id="add-debt-btn">
-                <i class="fas fa-plus"></i> إضافة الدين
-            </button>
-            
-            <div class="loading" id="add-debt-loading">
-                <i class="fas fa-spinner fa-spin"></i> جاري الإضافة...
-            </div>
-        </div>
-        
-        <!-- صفحة قبض دين -->
-        <div id="receive-debt-page" class="page">
-            <h2 class="page-title"><i class="fas fa-money-bill-wave"></i> قبض دين</h2>
-            
-            <div class="success-message" id="receive-debt-success">
-                تم قبض الدين بنجاح!
-            </div>
-            
-            <div class="form-group">
-                <label for="receive-customer">اختر العميل</label>
-                <select id="receive-customer">
-                    <option value="">-- اختر العميل --</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="receive-amount">المبلغ (ريال سعودي)</label>
-                <input type="number" id="receive-amount" placeholder="أدخل المبلغ" inputmode="numeric">
-            </div>
-            
-            <div class="form-group">
-                <label for="receive-notes">ملاحظات (اختياري)</label>
-                <textarea id="receive-notes" placeholder="أدخل أي ملاحظات حول القبض"></textarea>
-            </div>
-            
-            <button class="btn btn-success" id="receive-debt-btn">
-                <i class="fas fa-check"></i> قبض الدين
-            </button>
-            
-            <div class="loading" id="receive-debt-loading">
-                <i class="fas fa-spinner fa-spin"></i> جاري القبض...
-            </div>
-        </div>
-        
-        <!-- صفحة كشف حساب -->
-        <div id="account-statement-page" class="page">
-            <h2 class="page-title"><i class="fas fa-file-invoice-dollar"></i> كشف حساب العملاء</h2>
-            
-            <div class="customers-list" id="customers-list">
-                <!-- سيتم ملء هذه القائمة بالعملاء ديناميكيًا -->
-            </div>
-            
-            <!-- تفاصيل العميل (ستظهر عند النقر على عميل) -->
-            <div id="customer-details" style="display: none;">
-                <h3 class="page-title" id="customer-details-title">تفاصيل العميل</h3>
-                
-                <div class="customer-summary">
-                    <div class="customer-card">
-                        <div class="customer-name" id="detail-customer-name">أحمد محمد</div>
-                        <div class="customer-balance" id="detail-customer-balance">1,250 ريال</div>
-                    </div>
-                </div>
-                
-                <h4 class="page-title" style="font-size: 1.2rem;">سجل المعاملات</h4>
-                
-                <div class="transactions-list" id="transactions-list">
-                    <!-- سيتم ملء هذه القائمة بالمعاملات ديناميكيًا -->
-                </div>
-                
-                <button class="btn back-btn" id="back-to-customers">
-                    <i class="fas fa-arrow-right"></i> العودة إلى قائمة العملاء
-                </button>
-            </div>
-        </div>
-        
-        <!-- صفحة إضافة عميل -->
-        <div id="add-customer-page" class="page">
-            <h2 class="page-title"><i class="fas fa-user-plus"></i> إضافة عميل جديد</h2>
-            
-            <div class="success-message" id="add-customer-success">
-                تم إضافة العميل بنجاح!
-            </div>
-            
-            <div class="form-group">
-                <label for="customer-name">اسم العميل</label>
-                <input type="text" id="customer-name" placeholder="أدخل اسم العميل">
-            </div>
-            
-            <button class="btn btn-warning" id="add-customer-btn">
-                <i class="fas fa-plus"></i> إضافة العميل
-            </button>
-            
-            <div class="loading" id="add-customer-loading">
-                <i class="fas fa-spinner fa-spin"></i> جاري الإضافة...
-            </div>
-        </div>
-    </div>
-    
-    <!-- نافذة إدخال كلمة المرور -->
-    <div class="modal" id="password-modal">
-        <div class="modal-content">
-            <h3 class="modal-title">إدخال كلمة المرور</h3>
-            <div class="form-group">
-                <label for="password">كلمة المرور</label>
-                <input type="password" id="password" placeholder="أدخل كلمة المرور">
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-danger" id="confirm-password">تأكيد</button>
-                <button class="btn back-btn" id="cancel-password">إلغاء</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- نافذة تعديل المعاملة -->
-    <div class="modal" id="edit-transaction-modal">
-        <div class="modal-content">
-            <h3 class="modal-title">تعديل المعاملة</h3>
-            <div class="form-group">
-                <label for="edit-amount">المبلغ (ريال سعودي)</label>
-                <input type="number" id="edit-amount" placeholder="أدخل المبلغ">
-            </div>
-            <div class="form-group">
-                <label for="edit-notes">ملاحظات</label>
-                <textarea id="edit-notes" placeholder="أدخل أي ملاحظات"></textarea>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-warning" id="save-edit">حفظ التعديلات</button>
-                <button class="btn back-btn" id="cancel-edit">إلغاء</button>
-            </div>
-        </div>
+  <div class="card">
+    <h2>📒 إدارة ديون العملاء</h2>
+
+    <div id="mainMenu">
+      <button onclick="show('addDebt')">➕ إضافة دين</button>
+      <button onclick="show('payDebt')">💰 قبض دين</button>
+      <button onclick="show('statement')">📄 كشف حساب</button>
+      <button onclick="show('addClient')">👤 إضافة عميل</button>
     </div>
 
-    <script>
+    <div id="addDebt" class="hidden">
+      <h3>إضافة دين</h3>
+      <select id="debtClient"></select>
+      <input type="number" id="debtAmount" placeholder="المبلغ">
+      <textarea id="debtNote" placeholder="ملاحظة"></textarea>
+      <button onclick="sendTransaction('دين')">إضافة</button>
+      <p id="debtMsg"></p>
+      <button onclick="back()">⬅️ رجوع</button>
+    </div>
 
-// رابط السكريبت
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5bCXv5HrT1m3mhK6jMFtXuP76vwLwE-ZVLVPDkAJx2J0gZ8TpXZLCTaCrfQ1oBGs/exec';
+    <div id="payDebt" class="hidden">
+      <h3>قبض دين</h3>
+      <select id="payClient"></select>
+      <input type="number" id="payAmount" placeholder="المبلغ">
+      <textarea id="payNote" placeholder="ملاحظة"></textarea>
+      <button onclick="sendTransaction('قبض')">قبض</button>
+      <p id="payMsg"></p>
+      <button onclick="back()">⬅️ رجوع</button>
+    </div>
 
-// دالة اتصال محسنة
-async function callGoogleScript(action, data = {}) {
-    try {
-        // بناء URL مع parameters للـ GET
-        const params = new URLSearchParams();
-        params.append('action', action);
-        
-        for (const key in data) {
-            if (data[key] !== undefined && data[key] !== null) {
-                params.append(key, data[key]);
-            }
-        }
-        
-        const url = SCRIPT_URL + '?' + params.toString();
-        
-        console.log('محاولة الاتصال بـ:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        return result;
-        
-    } catch (error) {
-        console.error('خطأ في الاتصال:', error);
-        
-        // محاولة بديلة باستخدام POST
-        try {
-            const formData = new URLSearchParams();
-            formData.append('action', action);
-            
-            for (const key in data) {
-                if (data[key] !== undefined && data[key] !== null) {
-                    formData.append(key, data[key]);
-                }
-            }
-            
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData.toString(),
-                mode: 'no-cors'
-            });
-            
-            // مع no-cors لا يمكننا قراءة الresponse لكن نعتبره نجاحاً
-            return {success: true, message: 'تم الإرسال (no-cors mode)'};
-            
-        } catch (postError) {
-            console.error('فشلت محاولة POST أيضاً:', postError);
-            return { error: 'فشل في الاتصال بالخادم: ' + error.message };
-        }
+    <div id="statement" class="hidden">
+      <h3>كشف حساب</h3>
+      <select id="clientList" onchange="getStatement()"></select>
+      <div id="statementData"></div>
+      <button onclick="back()">⬅️ رجوع</button>
+    </div>
+
+    <div id="addClient" class="hidden">
+      <h3>إضافة عميل</h3>
+      <input type="text" id="newClient" placeholder="اسم العميل">
+      <button onclick="addClient()">إضافة</button>
+      <p id="clientMsg"></p>
+      <button onclick="back()">⬅️ رجوع</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbx6TYknUEt61F2_Vfpp9W4xpAGUWy25QJEZRgrtO1FZ05AGGPZQ6G2zWJ-WZ05zcZCpag/exec"; // ← ضع هنا رابط Google Script
+
+    async function api(data) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      return await res.json();
     }
-}
 
-        // العناصر الرئيسية
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const pages = document.querySelectorAll('.page');
-        
-        // إظهار وإخفاء الصفحات
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetPage = button.getAttribute('data-page');
-                
-                // إخفاء جميع الصفحات
-                pages.forEach(page => {
-                    page.classList.remove('active');
-                });
-                
-                // إظهار الصفحة المطلوبة
-                document.getElementById(targetPage).classList.add('active');
-                
-                // إذا كانت صفحة كشف الحساب، تأكد من إظهار قائمة العملاء وإخفاء التفاصيل
-                if (targetPage === 'account-statement-page') {
-                    document.getElementById('customers-list').style.display = 'grid';
-                    document.getElementById('customer-details').style.display = 'none';
-                    loadCustomers();
-                }
-            });
-        });
-        
-        // إضافة دين
-        document.getElementById('add-debt-btn').addEventListener('click', async function() {
-            const customerSelect = document.getElementById('debt-customer');
-            const amountInput = document.getElementById('debt-amount');
-            const notesInput = document.getElementById('debt-notes');
-            const loading = document.getElementById('add-debt-loading');
-            const successMessage = document.getElementById('add-debt-success');
-            
-            // التحقق من صحة البيانات
-            if (!customerSelect.value) {
-                alert('يرجى اختيار عميل');
-                return;
-            }
-            
-            if (!amountInput.value || amountInput.value <= 0) {
-                alert('يرجى إدخال مبلغ صحيح');
-                return;
-            }
-            
-            loading.classList.add('active');
-            
-            try {
-                const result = await callGoogleScript('addDebt', {
-                    customerId: customerSelect.value,
-                    amount: amountInput.value,
-                    notes: notesInput.value
-                });
-                
-                if (result.success) {
-                    successMessage.classList.add('active');
-                    customerSelect.value = '';
-                    amountInput.value = '';
-                    notesInput.value = '';
-                    
-                    // تحديث قائمة العملاء
-                    loadCustomers();
-                } else {
-                    alert(result.error || 'حدث خطأ أثناء الإضافة');
-                }
-            } catch (error) {
-                alert('فشل في الاتصال بالخادم');
-            } finally {
-                loading.classList.remove('active');
-            }
-        });
-        
-        // قبض دين
-        document.getElementById('receive-debt-btn').addEventListener('click', async function() {
-            const customerSelect = document.getElementById('receive-customer');
-            const amountInput = document.getElementById('receive-amount');
-            const notesInput = document.getElementById('receive-notes');
-            const loading = document.getElementById('receive-debt-loading');
-            const successMessage = document.getElementById('receive-debt-success');
-            
-            // التحقق من صحة البيانات
-            if (!customerSelect.value) {
-                alert('يرجى اختيار عميل');
-                return;
-            }
-            
-            if (!amountInput.value || amountInput.value <= 0) {
-                alert('يرجى إدخال مبلغ صحيح');
-                return;
-            }
-            
-            loading.classList.add('active');
-            
-            try {
-                const result = await callGoogleScript('receiveDebt', {
-                    customerId: customerSelect.value,
-                    amount: amountInput.value,
-                    notes: notesInput.value
-                });
-                
-                if (result.success) {
-                    successMessage.classList.add('active');
-                    customerSelect.value = '';
-                    amountInput.value = '';
-                    notesInput.value = '';
-                    
-                    // تحديث قائمة العملاء
-                    loadCustomers();
-                } else {
-                    alert(result.error || 'حدث خطأ أثناء القبض');
-                }
-            } catch (error) {
-                alert('فشل في الاتصال بالخادم');
-            } finally {
-                loading.classList.remove('active');
-            }
-        });
-        
-        // إضافة عميل
-        document.getElementById('add-customer-btn').addEventListener('click', async function() {
-            const nameInput = document.getElementById('customer-name');
-            const loading = document.getElementById('add-customer-loading');
-            const successMessage = document.getElementById('add-customer-success');
-            
-            if (!nameInput.value.trim()) {
-                alert('يرجى إدخال اسم العميل');
-                return;
-            }
-            
-            loading.classList.add('active');
-            
-            try {
-                const result = await callGoogleScript('addCustomer', {
-                    name: nameInput.value.trim()
-                });
-                
-                if (result.success) {
-                    successMessage.classList.add('active');
-                    nameInput.value = '';
-                    // تحديث قائمة العملاء
-                    loadCustomers();
-                } else {
-                    alert(result.error || 'حدث خطأ أثناء الإضافة');
-                }
-            } catch (error) {
-                alert('فشل في الاتصال بالخادم');
-            } finally {
-                loading.classList.remove('active');
-            }
-        });
-        
-        // دالة تحميل العملاء
-        async function loadCustomers() {
-            try {
-                const result = await callGoogleScript('getCustomers');
-                if (result.customers) {
-                    updateCustomersList(result.customers);
-                    updateCustomerSelects(result.customers);
-                }
-            } catch (error) {
-                console.error('Error loading customers:', error);
-            }
-        }
-
-        // تحديث قائمة العملاء في واجهة المستخدم
-function updateCustomersList(customers) {
-    const customersList = document.getElementById('customers-list');
-    customersList.innerHTML = '';
-    
-    if (customers.length === 0) {
-        customersList.innerHTML = '<p>لا يوجد عملاء</p>';
-        return;
+    function show(id) {
+      document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      loadClients();
     }
-    
-    customers.forEach(customer => {
-        const customerCard = document.createElement('div');
-        customerCard.className = 'customer-card';
-        customerCard.setAttribute('data-id', customer.id);
-        
-        // التأكد من أن الرصيد رقم صحيح
-        const balance = parseFloat(customer.balance) || 0;
-        const balanceClass = balance > 0 ? 'negative' : 'positive';
-        const balanceText = balance > 0 ? 
-            `${balance} ريال` : 
-            '0 ريال';
-        
-        customerCard.innerHTML = `
-            <div class="customer-name">${customer.name}</div>
-            <div class="customer-balance ${balanceClass}">${balanceText}</div>
-        `;
-        
-        customerCard.addEventListener('click', function() {
-            showCustomerDetails(customer.id, customer.name);
-        });
-        
-        customersList.appendChild(customerCard);
-    });
-}
 
-        // تحديث القوائم المنسدلة للعملاء
-        function updateCustomerSelects(customers) {
-            const debtSelect = document.getElementById('debt-customer');
-            const receiveSelect = document.getElementById('receive-customer');
-            
-            // حفظ القيمة المحددة حالياً
-            const debtSelected = debtSelect.value;
-            const receiveSelected = receiveSelect.value;
-            
-            // تحديث الخيارات
-            debtSelect.innerHTML = '<option value="">-- اختر العميل --</option>';
-            receiveSelect.innerHTML = '<option value="">-- اختر العميل --</option>';
-            
-            customers.forEach(customer => {
-                const option1 = document.createElement('option');
-                option1.value = customer.id;
-                option1.textContent = customer.name;
-                
-                const option2 = document.createElement('option');
-                option2.value = customer.id;
-                option2.textContent = customer.name;
-                
-                debtSelect.appendChild(option1);
-                receiveSelect.appendChild(option2);
-            });
-            
-            // استعادة القيم المحددة إن أمكن
-            if (debtSelected) debtSelect.value = debtSelected;
-            if (receiveSelected) receiveSelect.value = receiveSelected;
-        }
+    function back() {
+      document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
+      document.getElementById('mainMenu').classList.remove('hidden');
+    }
 
-        // عرض تفاصيل العميل
-        async function showCustomerDetails(customerId, customerName) {
-            const customersList = document.getElementById('customers-list');
-            const customerDetails = document.getElementById('customer-details');
-            
-            customersList.style.display = 'none';
-            customerDetails.style.display = 'block';
-            
-            // تعبئة بيانات العميل
-            document.getElementById('detail-customer-name').textContent = customerName;
-            
-            try {
-                const result = await callGoogleScript('getTransactions', { customerId: customerId });
-                
-                if (result.transactions) {
-                    // حساب الرصيد النهائي
-                    let balance = 0;
-                    result.transactions.forEach(transaction => {
-                        balance += parseFloat(transaction.amount);
-                    });
-                    
-                    document.getElementById('detail-customer-balance').textContent = 
-                        balance > 0 ? `${balance} ريال` : '0 ريال';
-                    document.getElementById('detail-customer-balance').className = 
-                        balance > 0 ? 'customer-balance negative' : 'customer-balance positive';
-                    
-                    // تعبئة المعاملات
-                    const transactionsList = document.getElementById('transactions-list');
-                    transactionsList.innerHTML = '';
-                    
-                    result.transactions.forEach(transaction => {
-                        const transactionElement = createTransactionElement(transaction);
-                        transactionsList.appendChild(transactionElement);
-                    });
-                } else {
-                    document.getElementById('detail-customer-balance').textContent = '0 ريال';
-                    document.getElementById('detail-customer-balance').className = 'customer-balance positive';
-                    document.getElementById('transactions-list').innerHTML = '<p>لا توجد معاملات</p>';
-                }
-            } catch (error) {
-                console.error('Error loading transactions:', error);
-                document.getElementById('transactions-list').innerHTML = '<p>خطأ في تحميل المعاملات</p>';
-            }
-        }
-        
-        // العودة إلى قائمة العملاء
-        document.getElementById('back-to-customers').addEventListener('click', function() {
-            document.getElementById('customers-list').style.display = 'grid';
-            document.getElementById('customer-details').style.display = 'none';
+    async function loadClients() {
+      const clients = await api({action: 'getClients'});
+      ['debtClient','payClient','clientList'].forEach(id=>{
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">اختر العميل</option>';
+        clients.forEach(c=>{
+          const opt = document.createElement('option');
+          opt.value = c; opt.textContent = c;
+          sel.appendChild(opt);
         });
-        
-        // إنشاء عنصر معاملة
-        function createTransactionElement(transaction) {
-            const div = document.createElement('div');
-            div.className = 'transaction-item';
-            
-            const amountClass = transaction.amount < 0 ? 'negative' : 'positive';
-            const amountText = transaction.amount < 0 ? 
-                `-${Math.abs(transaction.amount)} ريال` : 
-                `+${transaction.amount} ريال`;
-            
-            div.innerHTML = `
-                <div class="transaction-header">
-                    <div class="transaction-date">${transaction.date}</div>
-                    <div class="transaction-amount ${amountClass}">${amountText}</div>
-                </div>
-                <div class="transaction-notes">${transaction.notes}</div>
-                <div class="transaction-actions">
-                    <button class="action-btn edit-btn" data-id="${transaction.id}">تعديل</button>
-                    <button class="action-btn delete-btn" data-id="${transaction.id}">حذف</button>
-                </div>
-            `;
-            
-            // إضافة مستمعي الأحداث للأزرار
-            const editBtn = div.querySelector('.edit-btn');
-            const deleteBtn = div.querySelector('.delete-btn');
-            
-            editBtn.addEventListener('click', function() {
-                openEditModal(transaction);
-            });
-            
-            deleteBtn.addEventListener('click', function() {
-                openDeleteModal(transaction.id);
-            });
-            
-            return div;
-        }
-        
-        // فتح نافذة التعديل
-        function openEditModal(transaction) {
-            document.getElementById('edit-amount').value = Math.abs(transaction.amount);
-            document.getElementById('edit-notes').value = transaction.notes;
-            document.getElementById('edit-transaction-modal').classList.add('active');
-            
-            // حفظ معرف المعاملة في الزر
-            document.getElementById('save-edit').setAttribute('data-id', transaction.id);
-        }
-        
-        // فتح نافذة الحذف
-        function openDeleteModal(transactionId) {
-            document.getElementById('password-modal').classList.add('active');
-            
-            // حفظ معرف المعاملة في الزر
-            document.getElementById('confirm-password').setAttribute('data-id', transactionId);
-        }
-        
-        // إغلاق جميع النوافذ المنبثقة
-        function closeAllModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('active');
-            });
-        }
-        
-        // مستمعي الأحداث للنوافذ المنبثقة
-        document.getElementById('cancel-password').addEventListener('click', closeAllModals);
-        document.getElementById('cancel-edit').addEventListener('click', closeAllModals);
-        
-        // تأكيد كلمة المرور للحذف
-        document.getElementById('confirm-password').addEventListener('click', async function() {
-            const password = document.getElementById('password').value;
-            const transactionId = this.getAttribute('data-id');
-            
-            if (password === '1234') {
-                try {
-                    const result = await callGoogleScript('deleteTransaction', {
-                        transactionId: transactionId
-                    });
-                    
-                    if (result.success) {
-                        alert('تم حذف المعاملة بنجاح');
-                        closeAllModals();
-                        document.getElementById('password').value = '';
-                        
-                        // إعادة تحميل تفاصيل العميل
-                        const customerName = document.getElementById('detail-customer-name').textContent;
-                        const customerId = document.querySelector('.customer-card[data-id]').getAttribute('data-id');
-                        showCustomerDetails(customerId, customerName);
-                    } else {
-                        alert(result.error || 'حدث خطأ أثناء الحذف');
-                    }
-                } catch (error) {
-                    alert('فشل في الاتصال بالخادم');
-                }
-            } else {
-                alert('كلمة المرور غير صحيحة');
-            }
-        });
-        
-        // حفظ التعديلات
-        document.getElementById('save-edit').addEventListener('click', async function() {
-            const transactionId = this.getAttribute('data-id');
-            const amount = document.getElementById('edit-amount').value;
-            const notes = document.getElementById('edit-notes').value;
-            
-            try {
-                const result = await callGoogleScript('updateTransaction', {
-                    transactionId: transactionId,
-                    amount: amount,
-                    notes: notes
-                });
-                
-                if (result.success) {
-                    alert('تم تعديل المعاملة بنجاح');
-                    closeAllModals();
-                    
-                    // إعادة تحميل تفاصيل العميل
-                    const customerName = document.getElementById('detail-customer-name').textContent;
-                    const customerId = document.querySelector('.customer-card[data-id]').getAttribute('data-id');
-                    showCustomerDetails(customerId, customerName);
-                } else {
-                    alert(result.error || 'حدث خطأ أثناء التعديل');
-                }
-            } catch (error) {
-                alert('فشل في الاتصال بالخادم');
-            }
-        });
-        
-        // إغلاق النوافذ المنبثقة بالنقر خارجها
-        window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                closeAllModals();
-            }
-        });
+      });
+    }
 
-        // تحميل العملاء عند فتح التطبيق
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCustomers();
-        });
-    </script>
+    async function sendTransaction(type) {
+      const isDebt = type === 'دين';
+      const client = document.getElementById(isDebt ? 'debtClient':'payClient').value;
+      const amount = document.getElementById(isDebt ? 'debtAmount':'payAmount').value;
+      const note = document.getElementById(isDebt ? 'debtNote':'payNote').value;
+      const msg = document.getElementById(isDebt ? 'debtMsg':'payMsg');
+      if (!client || !amount) return msg.textContent = '❗الرجاء تعبئة جميع الحقول';
+      msg.textContent = '⏳ جاري الإضافة...';
+      const res = await api({action:'addTransaction', client, amount, note, type});
+      msg.textContent = res;
+    }
+
+    async function addClient() {
+      const name = document.getElementById('newClient').value.trim();
+      const msg = document.getElementById('clientMsg');
+      if (!name) return msg.textContent = '❗الرجاء إدخال الاسم';
+      msg.textContent = '⏳ جاري الإضافة...';
+      const res = await api({action:'addClient', name});
+      msg.textContent = res;
+    }
+
+    async function getStatement() {
+      const client = document.getElementById('clientList').value;
+      const div = document.getElementById('statementData');
+      if (!client) return div.innerHTML = '';
+      div.innerHTML = '⏳ جاري التحميل...';
+      const data = await api({action:'getStatement', client});
+      if (!data.length) return div.innerHTML = '<p>لا توجد عمليات</p>';
+      let html = `<table border="1" style="width:100%;margin:auto"><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th></tr>`;
+      data.forEach((r,i)=>{
+        html += `<tr onclick="deleteRow('${client}',${i})"><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`;
+      });
+      html += '</table>';
+      div.innerHTML = html;
+    }
+
+    async function deleteRow(client, rowIndex) {
+      const pass = prompt('🔐 أدخل الرقم السري (1234) للحذف:');
+      if (!pass) return;
+      const res = await api({action:'deleteTransaction', client, rowIndex, password: pass});
+      alert(res);
+      getStatement();
+    }
+
+    loadClients();
+  </script>
 </body>
 </html>

@@ -1,186 +1,284 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>📒 ديون العملاء</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>نظام إدارة ديون العملاء</title>
   <style>
-    body {
-      font-family: "Cairo", sans-serif;
-      background: linear-gradient(135deg, #3f51b5, #2196f3);
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+    :root { --primary:#0b69ff; --card:#fff; --bg:#f2f6fb; --muted:#666;}
+    body { margin:0; font-family: "Segoe UI", Tahoma, Arial; background:var(--bg); color:#222; }
+    .wrap { max-width:820px; margin:18px auto; padding:12px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    h1 { font-size:20px; margin:0; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    button.action { background:var(--primary); color:#fff; border:none; padding:10px 14px; border-radius:10px; font-size:15px; box-shadow:0 6px 16px rgba(11,105,255,0.15); }
+    .card { background:var(--card); padding:14px; border-radius:12px; box-shadow: 0 4px 12px rgba(40,40,60,0.06); margin-top:14px; }
+    select, input, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e0e6f0; font-size:15px; box-sizing:border-box; }
+    input[type=number] { text-align:center; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; font-size:14px; }
+    th,td { padding:8px 6px; border-bottom:1px solid #eee; text-align:center; }
+    .btn-small { padding:6px 8px; border-radius:8px; border:none; cursor:pointer; }
+    .btn-edit { background:#ffd54d; }
+    .btn-del { background:#ff6b6b; color:#fff; }
+    .muted { color:var(--muted); font-size:13px; }
+    @media (max-width:520px){
+      h1{font-size:18px}
+      .row { gap:6px; }
+      button.action { flex:1 1 48%; }
     }
-    .card {
-      background: #fff;
-      color: #333;
-      border-radius: 20px;
-      padding: 20px;
-      width: 90%;
-      max-width: 450px;
-      margin: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    button {
-      width: 100%;
-      margin: 8px 0;
-      padding: 14px;
-      font-size: 18px;
-      background: #2196f3;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover { background: #1976d2; }
-    select, input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    h2, h3 { margin-bottom: 10px; }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>📒 إدارة ديون العملاء</h2>
+  <div class="wrap">
+    <header>
+      <h1>💼 إدارة ديون العملاء</h1>
+      <div class="muted">كلمة السر للتعديل/حذف: <strong>1234</strong></div>
+    </header>
 
-    <div id="mainMenu">
-      <button onclick="show('addDebt')">➕ إضافة دين</button>
-      <button onclick="show('payDebt')">💰 قبض دين</button>
-      <button onclick="show('statement')">📄 كشف حساب</button>
-      <button onclick="show('addClient')">👤 إضافة عميل</button>
+    <div class="row">
+      <button class="action" onclick="showPage('addDebt')">➕ إضافة دين</button>
+      <button class="action" onclick="showPage('collectDebt')">💵 قبض دين</button>
+      <button class="action" onclick="showPage('report')">📄 كشف حساب</button>
+      <button class="action" onclick="showPage('addClient')">👤 إضافة عميل</button>
     </div>
 
-    <div id="addDebt" class="hidden">
-      <h3>إضافة دين</h3>
-      <select id="debtClient"></select>
-      <input type="number" id="debtAmount" placeholder="المبلغ">
-      <textarea id="debtNote" placeholder="ملاحظة"></textarea>
-      <button onclick="sendTransaction('دين')">إضافة</button>
-      <p id="debtMsg"></p>
-      <button onclick="back()">⬅️ رجوع</button>
-    </div>
-
-    <div id="payDebt" class="hidden">
-      <h3>قبض دين</h3>
-      <select id="payClient"></select>
-      <input type="number" id="payAmount" placeholder="المبلغ">
-      <textarea id="payNote" placeholder="ملاحظة"></textarea>
-      <button onclick="sendTransaction('قبض')">قبض</button>
-      <p id="payMsg"></p>
-      <button onclick="back()">⬅️ رجوع</button>
-    </div>
-
-    <div id="statement" class="hidden">
-      <h3>كشف حساب</h3>
-      <select id="clientList" onchange="getStatement()"></select>
-      <div id="statementData"></div>
-      <button onclick="back()">⬅️ رجوع</button>
-    </div>
-
-    <div id="addClient" class="hidden">
-      <h3>إضافة عميل</h3>
-      <input type="text" id="newClient" placeholder="اسم العميل">
-      <button onclick="addClient()">إضافة</button>
-      <p id="clientMsg"></p>
-      <button onclick="back()">⬅️ رجوع</button>
+    <div id="content" class="card">
+      <p class="muted">اختر إجراء من الأعلى لبدء العمل.</p>
     </div>
   </div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbx6TYknUEt61F2_Vfpp9W4xpAGUWy25QJEZRgrtO1FZ05AGGPZQ6G2zWJ-WZ05zcZCpag/exec"; // ← ضع هنا رابط Google Script
+<script>
+  // ====== ضع رابط Web App الناتج من Google Apps Script هنا ======
+  const API_URL = "https://script.google.com/macros/s/AKfycbwrx01WqifFOjKXAaBVUF5aPWVfgrn7spvU_hCPNffe6m_Fkp3Fu5yrR8bSrbSVTRig/exec";
+  // ==========================================================
 
-    async function api(data) {
+  async function api(payload){
+    try {
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
       });
-      return await res.json();
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(e){ return {status:'error', message: text}; }
+    } catch (err) {
+      return {status:"error", message: "فشل الاتصال: " + err.message};
+    }
+  }
+
+  function showMessage(msg){
+    document.getElementById('content').innerHTML = `<p class="muted">${msg}</p>`;
+  }
+
+  async function getClients(){
+    const res = await api({action:"getClients"});
+    if (res.status !== 'success') return [];
+    return res.data || [];
+  }
+
+  async function showPage(page){
+    const content = document.getElementById('content');
+    content.innerHTML = "جاري التحميل...";
+    if (page === 'addClient'){
+      content.innerHTML = `
+        <h3>إضافة عميل جديد</h3>
+        <input id="clientName" placeholder="اسم العميل (مثلاً: متجر البدر)">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="action" onclick="addClient()">إضافة</button>
+          <button class="btn-small" onclick="showMessage('تم الإلغاء')">إلغاء</button>
+        </div>
+      `;
+      return;
     }
 
-    function show(id) {
-      document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      loadClients();
+    if (page === 'addDebt' || page === 'collectDebt'){
+      const clients = await getClients();
+      if (!clients || clients.length === 0){
+        content.innerHTML = `<p class="muted">لا يوجد عملاء. أضف عميل أولاً.</p>`;
+        return;
+      }
+      const options = clients.map(c=>`<option value="${escapeHtml(c[0])}">${escapeHtml(c[0])}</option>`).join('');
+      content.innerHTML = `
+        <h3>${page==='addDebt'?'إضافة دين':'قبض دين'}</h3>
+        <label>العميل</label>
+        <select id="clientSelect">${options}</select>
+        <label>المبلغ</label>
+        <input id="amount" type="number" inputmode="numeric" placeholder="أدخل المبلغ فقط">
+        <label>ملاحظة (اختياري)</label>
+        <textarea id="note" rows="2" placeholder="ملاحظة"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="action" onclick="submitDebt('${page}')">${page==='addDebt'?'إضافة':'قبض'}</button>
+          <button class="btn-small" onclick="showPage('report')">رجوع</button>
+        </div>
+      `;
+      return;
     }
 
-    function back() {
-      document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
-      document.getElementById('mainMenu').classList.remove('hidden');
+    if (page === 'report'){
+      const clients = await getClients();
+      if (!clients || clients.length === 0) {
+        content.innerHTML = `<p class="muted">لا يوجد عملاء حتى الآن.</p>`;
+        return;
+      }
+      const list = clients.map(c => {
+        const name = escapeHtml(c[0] || "");
+        const amt = c[1] || 0;
+        return `<li style="margin-bottom:8px"><button class="btn-small" style="width:100%;text-align:right;padding:10px" onclick="showClient('${name}')">${name} — ${amt}‬</button></li>`;
+      }).join('');
+      content.innerHTML = `<h3>كشف الحساب</h3><ul style="list-style:none;padding:0">${list}</ul>`;
+      return;
+    }
+  }
+
+  // ===== Add client =====
+  async function addClient(){
+    const name = document.getElementById('clientName').value.trim();
+    if (!name) { alert("أدخل اسم العميل"); return; }
+    showMessage("جاري الإضافة...");
+    const res = await api({action:"addClient", name});
+    if (res.status === 'success') {
+      alert(res.message || "تمت الإضافة");
+      showPage('report');
+    } else {
+      alert(res.message || "حدث خطأ");
+      showPage('addClient');
+    }
+  }
+
+  // ===== Add / Collect debt =====
+  async function submitDebt(page){
+    const client = document.getElementById('clientSelect').value;
+    const amount = document.getElementById('amount').value;
+    const note = document.getElementById('note').value;
+    if (!client) { alert("حدد العميل"); return; }
+    if (!amount || Number(amount) <= 0) { alert("أدخل مبلغ صالح"); return; }
+    showMessage("جاري المعالجة...");
+    const action = (page === 'addDebt') ? 'addDebt' : 'collectDebt';
+    const res = await api({action, client, amount, note});
+    if (res.status === 'success') {
+      alert(res.message || "تمت العملية");
+      showPage('report');
+    } else {
+      alert(res.message || "حدث خطأ");
+      showPage('report');
+    }
+  }
+
+  // ===== Show client details =====
+  async function showClient(name){
+    const content = document.getElementById('content');
+    showMessage("جاري التحميل...");
+    const res = await api({action:"getClientDetails", client: name});
+    if (res.status !== 'success') { alert(res.message || "لم أتمكن من جلب البيانات"); return; }
+    const rows = res.data || [];
+    if (rows.length === 0) {
+      content.innerHTML = `<h3>عمليات ${escapeHtml(name)}</h3><p class="muted">لا توجد عمليات</p><div style="margin-top:8px"><button class="btn-small" onclick="showPage('report')">رجوع</button></div>`;
+      return;
     }
 
-    async function loadClients() {
-      const clients = await api({action: 'getClients'});
-      ['debtClient','payClient','clientList'].forEach(id=>{
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">اختر العميل</option>';
-        clients.forEach(c=>{
-          const opt = document.createElement('option');
-          opt.value = c; opt.textContent = c;
-          sel.appendChild(opt);
-        });
-      });
-    }
+    let rowsHtml = rows.map((r,i)=>{
+      const type = escapeHtml(r[0]||"");
+      const amount = escapeHtml(r[1]||"");
+      const note = escapeHtml(r[2]||"");
+      const date = escapeHtml(r[3]||"");
+      return `<tr>
+        <td>${type}</td>
+        <td>${amount}</td>
+        <td style="text-align:right">${note}</td>
+        <td>${date}</td>
+        <td>
+          <button class="btn-small btn-edit" onclick="editRow('${escapeJs(name)}', ${i})">تعديل</button>
+          <button class="btn-small btn-del" onclick="deleteRow('${escapeJs(name)}', ${i})">مسح</button>
+        </td>
+      </tr>`;
+    }).join('');
 
-    async function sendTransaction(type) {
-      const isDebt = type === 'دين';
-      const client = document.getElementById(isDebt ? 'debtClient':'payClient').value;
-      const amount = document.getElementById(isDebt ? 'debtAmount':'payAmount').value;
-      const note = document.getElementById(isDebt ? 'debtNote':'payNote').value;
-      const msg = document.getElementById(isDebt ? 'debtMsg':'payMsg');
-      if (!client || !amount) return msg.textContent = '❗الرجاء تعبئة جميع الحقول';
-      msg.textContent = '⏳ جاري الإضافة...';
-      const res = await api({action:'addTransaction', client, amount, note, type});
-      msg.textContent = res;
-    }
+    content.innerHTML = `
+      <h3>عمليات ${escapeHtml(name)}</h3>
+      <table>
+        <thead><tr><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th>تاريخ</th><th>تحكم</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div style="margin-top:10px"><button class="btn-small" onclick="showPage('report')">رجوع</button></div>
+    `;
+  }
 
-    async function addClient() {
-      const name = document.getElementById('newClient').value.trim();
-      const msg = document.getElementById('clientMsg');
-      if (!name) return msg.textContent = '❗الرجاء إدخال الاسم';
-      msg.textContent = '⏳ جاري الإضافة...';
-      const res = await api({action:'addClient', name});
-      msg.textContent = res;
+  // ===== Delete operation (with password check) =====
+  async function deleteRow(client, index){
+    const password = prompt("أدخل الرقم السري للحذف:");
+    if (password === null) return;
+    showMessage("جاري الحذف...");
+    const res = await api({action:"deleteOperation", client, index, password});
+    if (res.status === 'success') {
+      alert(res.message || "تم الحذف");
+      showPage('report'); // تحدث قائمة العملاء
+    } else {
+      alert(res.message || "فشل الحذف: كلمة سر خاطئة أو خطأ آخر");
+      showClient(client); // عد لعرض العميل
     }
+  }
 
-    async function getStatement() {
-      const client = document.getElementById('clientList').value;
-      const div = document.getElementById('statementData');
-      if (!client) return div.innerHTML = '';
-      div.innerHTML = '⏳ جاري التحميل...';
-      const data = await api({action:'getStatement', client});
-      if (!data.length) return div.innerHTML = '<p>لا توجد عمليات</p>';
-      let html = `<table border="1" style="width:100%;margin:auto"><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th></tr>`;
-      data.forEach((r,i)=>{
-        html += `<tr onclick="deleteRow('${client}',${i})"><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`;
-      });
-      html += '</table>';
-      div.innerHTML = html;
+  // ===== Edit operation UI =====
+  async function editRow(client, index){
+    // اجلب تفاصيل الصف لملء الحقول
+    const res = await api({action:"getClientDetails", client});
+    if (res.status !== 'success') { alert(res.message || "خطأ"); return; }
+    const row = (res.data || [])[index];
+    if (!row) { alert("العملية غير موجودة"); return; }
+
+    const curType = row[0] || "دين";
+    const curAmount = row[1] || "";
+    const curNote = row[2] || "";
+
+    document.getElementById('content').innerHTML = `
+      <h3>تعديل عملية لـ ${escapeHtml(client)}</h3>
+      <label>النوع</label>
+      <select id="editType">
+        <option ${curType === 'دين' ? 'selected' : ''}>دين</option>
+        <option ${curType === 'قبض' ? 'selected' : ''}>قبض</option>
+      </select>
+      <label>المبلغ</label>
+      <input id="editAmount" type="number" inputmode="numeric" value="${escapeHtml(curAmount)}">
+      <label>ملاحظة</label>
+      <input id="editNote" value="${escapeHtml(curNote)}">
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="action" onclick="saveEdit('${escapeJs(client)}', ${index})">حفظ التعديل</button>
+        <button class="btn-small" onclick="showClient('${escapeJs(client)}')">إلغاء</button>
+      </div>
+    `;
+  }
+
+  async function saveEdit(client, index){
+    const password = prompt("أدخل الرقم السري للتعديل:");
+    if (password === null) return;
+    const type = document.getElementById('editType').value;
+    const amount = document.getElementById('editAmount').value;
+    const note = document.getElementById('editNote').value;
+
+    if (!amount || Number(amount) < 0) { alert("أدخل مبلغ صحيح"); return; }
+
+    showMessage("جاري حفظ التعديل...");
+    const res = await api({action:"editOperation", client, index, amount, note, type, password});
+    if (res.status === 'success') {
+      alert(res.message || "تم التعديل");
+      showClient(client);
+    } else {
+      alert(res.message || "فشل التعديل: كلمة سر خاطئة أو خطأ آخر");
+      showClient(client);
     }
+  }
 
-    async function deleteRow(client, rowIndex) {
-      const pass = prompt('🔐 أدخل الرقم السري (1234) للحذف:');
-      if (!pass) return;
-      const res = await api({action:'deleteTransaction', client, rowIndex, password: pass});
-      alert(res);
-      getStatement();
-    }
+  // ===== helpers to escape HTML/JS injection =====
+  function escapeHtml(str){
+    if (!str && str!==0) return "";
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+  function escapeJs(str){
+    return String(str).replace(/'/g,"\\'");
+  }
 
-    loadClients();
-  </script>
+  // بداية: عرض الصفحة الرئيسية
+  showPage('report');
+</script>
 </body>
 </html>
